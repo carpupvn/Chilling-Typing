@@ -40,16 +40,14 @@
 
   applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
-  /* ========== DYNAMIC CARET (mượt + sáng khi gõ) ========== */
+  /* ========== DYNAMIC CARET - cải tiến mượt mà ========== */
   let isTyping = false;
   let typingTimer = null;
+  let lastCaretPos = { left: 0, top: 0, height: 20 };
 
   function setCaretBlink(blink) {
-    if (blink) {
-      caret.classList.add('blink');
-    } else {
-      caret.classList.remove('blink');
-    }
+    if (blink) caret.classList.add('blink');
+    else caret.classList.remove('blink');
   }
 
   editor.addEventListener('keydown', () => {
@@ -89,6 +87,9 @@
     parent.removeChild(marker);
     parent.normalize();
 
+    if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
+      return null;
+    }
     return rect;
   }
 
@@ -98,8 +99,10 @@
       return;
     }
     const rect = getCaretRect();
-    if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
-      caret.classList.add('hidden');
+    if (!rect) {
+      if (lastCaretPos.left === 0 && lastCaretPos.top === 0) {
+        caret.classList.add('hidden');
+      }
       return;
     }
     caret.classList.remove('hidden');
@@ -107,6 +110,7 @@
     caret.style.left = rect.left + 'px';
     caret.style.top = rect.top + 'px';
     caret.style.height = height + 'px';
+    lastCaretPos = { left: rect.left, top: rect.top, height: height };
   }
 
   let caretRaf = null;
@@ -204,7 +208,7 @@
     fileInput.value = '';
   });
 
-  /* ========== MUSIC PLAYER (nâng cao + playlist) ========== */
+  /* ========== MUSIC PLAYER - nâng cao + playlist ========== */
   let playlist = [];
   let currentAudio = null;
   let currentIndex = -1;
@@ -278,7 +282,12 @@
             <span>${item.label || 'YouTube / SoundCloud'}</span>
             <button class="remove-btn" id="stop-iframe-btn">✕ Dừng</button>
           </div>
-          <iframe src="${item.src}" style="width:100%;height:80px;border:none;border-radius:8px;" allow="autoplay"></iframe>
+          <iframe src="${item.src}" 
+                  style="width:100%; height:80px; border:none; border-radius:8px;" 
+                  allow="autoplay; encrypted-media" 
+                  sandbox="allow-scripts allow-same-origin allow-forms"
+                  loading="lazy">
+          </iframe>
         </div>
       `;
       document.getElementById('stop-iframe-btn').addEventListener('click', () => {
@@ -397,7 +406,7 @@
           videoId = url.pathname.split('/embed/')[1];
         }
         if (videoId) {
-          embedSrc = 'https://www.youtube.com/embed/' + videoId + '?autoplay=0';
+          embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&showinfo=0&controls=1&iv_load_policy=3`;
           label = 'YouTube: ' + videoId;
         }
       } else if (url.hostname.includes('soundcloud.com')) {
