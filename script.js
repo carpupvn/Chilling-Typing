@@ -110,7 +110,11 @@
     caret.style.height = height + 'px';
     lastCaretPos = { left: rect.left, top: rect.top, height: height };
 
-    scrollToBottom();
+    // Chỉ tự động cuộn xuống nếu người dùng đang ở gần cuối (không kéo lên)
+    const isNearBottom = editorWrap.scrollTop + editorWrap.clientHeight >= editorWrap.scrollHeight - 30;
+    if (isNearBottom) {
+      scrollToBottom();
+    }
   }
 
   let caretRaf = null;
