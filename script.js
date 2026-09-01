@@ -5,12 +5,6 @@
   const titleInput = document.getElementById('title-input');
   const wordCountEl = document.getElementById('word-count');
   const saveStatusEl = document.getElementById('save-status');
-  const musicPanel = document.getElementById('music-panel');
-  const musicUrlInput = document.getElementById('music-url');
-  const musicDrop = document.getElementById('music-drop');
-  const musicFileInput = document.getElementById('music-file');
-  const musicPlayerArea = document.getElementById('music-player-area');
-  const playlistContainer = document.getElementById('playlist-container');
   const fileInput = document.getElementById('file-input');
 
   const STORAGE_KEY = 'chilling-typing:draft';
@@ -40,7 +34,7 @@
 
   applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
-  /* ========== DYNAMIC CARET - cải tiến mượt mà ========== */
+  /* ========== DYNAMIC CARET ========== */
   let isTyping = false;
   let typingTimer = null;
   let lastCaretPos = { left: 0, top: 0, height: 20 };
@@ -94,7 +88,6 @@
   }
 
   function scrollToBottom() {
-    // Cuộn xuống cuối vùng soạn thảo
     editorWrap.scrollTop = editorWrap.scrollHeight;
   }
 
@@ -117,7 +110,6 @@
     caret.style.height = height + 'px';
     lastCaretPos = { left: rect.left, top: rect.top, height: height };
 
-    // Tự động cuộn xuống khi viết
     scrollToBottom();
   }
 
@@ -138,27 +130,19 @@
   /* ========== CLEAR ALL (Tạo mới) ========== */
   document.getElementById('btn-clear').addEventListener('click', () => {
     if (confirm('Bạn có chắc muốn xóa toàn bộ nội dung? (không thể khôi phục)')) {
-      // Xóa nội dung editor
       editor.innerHTML = '';
-      // Xóa tiêu đề
       titleInput.value = '';
-      // Xóa lưu tạm
       localStorage.removeItem(STORAGE_KEY);
-      // Cập nhật số từ
       updateWordCount();
-      // Đưa con trỏ về đầu
       editor.focus();
-      // Đặt caret ở đầu
       const sel = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(editor);
       range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);
-      // Cập nhật caret và cuộn lên đầu
       scheduleCaretUpdate();
       editorWrap.scrollTop = 0;
-      // Hiển thị thông báo
       saveStatusEl.textContent = 'Đã tạo mới';
       setTimeout(() => { saveStatusEl.textContent = ''; }, 1500);
     }
@@ -237,7 +221,6 @@
         editor.innerHTML = data.content || '';
         updateWordCount();
         scheduleAutosave();
-        // Cuộn lên đầu sau khi tải
         editorWrap.scrollTop = 0;
         scheduleCaretUpdate();
       } catch (err) {
@@ -248,271 +231,12 @@
     fileInput.value = '';
   });
 
-  /* ========== MUSIC PLAYER - nâng cao + playlist ========== */
-  let playlist = [];
-  let currentAudio = null;
-  let currentIndex = -1;
-  let isPlaying = false;
-
-  const playlistEl = playlistContainer;
-
-  function renderPlaylist() {
-    playlistEl.innerHTML = '';
-    playlist.forEach((item, idx) => {
-      const div = document.createElement('div');
-      div.className = 'playlist-item' + (idx === currentIndex ? ' active' : '');
-      div.innerHTML = `
-        <span>${item.label || item.name || 'Bài hát'}</span>
-        <button class="pl-remove" data-index="${idx}">✕</button>
-      `;
-      div.addEventListener('click', (e) => {
-        if (e.target.classList.contains('pl-remove')) return;
-        playItem(idx);
-      });
-      div.querySelector('.pl-remove').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const index = parseInt(e.target.dataset.index);
-        removeFromPlaylist(index);
-      });
-      playlistEl.appendChild(div);
-    });
-  }
-
-  function addToPlaylist(item) {
-    playlist.push(item);
-    renderPlaylist();
-    if (currentIndex === -1) {
-      playItem(playlist.length - 1);
-    }
-  }
-
-  function removeFromPlaylist(index) {
-    if (index === currentIndex) {
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.src = '';
-        currentAudio = null;
-      }
-      isPlaying = false;
-      currentIndex = -1;
-      musicPlayerArea.innerHTML = '';
-    } else if (index < currentIndex) {
-      currentIndex--;
-    }
-    playlist.splice(index, 1);
-    renderPlaylist();
-    if (playlist.length === 0) {
-      musicPlayerArea.innerHTML = '';
-      currentIndex = -1;
-    } else if (currentIndex === -1 && playlist.length > 0) {
-      playItem(0);
-    }
-  }
-
-  function playItem(index) {
-    if (index < 0 || index >= playlist.length) return;
-    const item = playlist[index];
-    currentIndex = index;
-    renderPlaylist();
-
-    if (item.type === 'iframe') {
-      musicPlayerArea.innerHTML = `
-        <div class="custom-player">
-          <div class="track-info">
-            <span>${item.label || 'YouTube / SoundCloud'}</span>
-            <button class="remove-btn" id="stop-iframe-btn">✕ Dừng</button>
-          </div>
-          <iframe src="${item.src}" 
-                  style="width:100%; height:80px; border:none; border-radius:8px;" 
-                  allow="autoplay; encrypted-media" 
-                  sandbox="allow-scripts allow-same-origin allow-forms"
-                  loading="lazy">
-          </iframe>
-        </div>
-      `;
-      document.getElementById('stop-iframe-btn').addEventListener('click', () => {
-        musicPlayerArea.innerHTML = '';
-        currentIndex = -1;
-        renderPlaylist();
-      });
-      return;
-    }
-
-    const audio = new Audio(item.src);
-    currentAudio = audio;
-    isPlaying = false;
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'custom-player';
-    wrapper.innerHTML = `
-      <div class="track-info">
-        <span>${item.label || item.name || 'Bài hát'}</span>
-        <button class="remove-btn" id="stop-audio-btn">✕ Dừng</button>
-      </div>
-      <div class="controls">
-        <button id="play-pause-btn">▶</button>
-        <span class="time-display" id="time-display">0:00 / 0:00</span>
-        <input type="range" id="progress-slider" min="0" max="1000" value="0" />
-      </div>
-    `;
-    musicPlayerArea.innerHTML = '';
-    musicPlayerArea.appendChild(wrapper);
-
-    const playPauseBtn = document.getElementById('play-pause-btn');
-    const timeDisplay = document.getElementById('time-display');
-    const progressSlider = document.getElementById('progress-slider');
-
-    audio.addEventListener('loadedmetadata', () => {
-      timeDisplay.textContent = `0:00 / ${formatTime(audio.duration)}`;
-      progressSlider.max = 1000;
-    });
-
-    audio.addEventListener('timeupdate', () => {
-      if (audio.duration) {
-        const percent = (audio.currentTime / audio.duration) * 1000;
-        progressSlider.value = percent;
-        timeDisplay.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
-      }
-    });
-
-    audio.addEventListener('ended', () => {
-      isPlaying = false;
-      playPauseBtn.textContent = '▶';
-      const nextIndex = currentIndex + 1;
-      if (nextIndex < playlist.length) {
-        playItem(nextIndex);
-      } else {
-        musicPlayerArea.innerHTML = '';
-        currentIndex = -1;
-        renderPlaylist();
-      }
-    });
-
-    playPauseBtn.addEventListener('click', () => {
-      if (isPlaying) {
-        audio.pause();
-        isPlaying = false;
-        playPauseBtn.textContent = '▶';
-      } else {
-        audio.play().catch(() => {});
-        isPlaying = true;
-        playPauseBtn.textContent = '⏸';
-      }
-    });
-
-    progressSlider.addEventListener('input', () => {
-      if (audio.duration) {
-        const percent = progressSlider.value / 1000;
-        audio.currentTime = percent * audio.duration;
-      }
-    });
-
-    document.getElementById('stop-audio-btn').addEventListener('click', () => {
-      audio.pause();
-      audio.src = '';
-      currentAudio = null;
-      isPlaying = false;
-      musicPlayerArea.innerHTML = '';
-      currentIndex = -1;
-      renderPlaylist();
-    });
-
-    audio.play().then(() => {
-      isPlaying = true;
-      playPauseBtn.textContent = '⏸';
-    }).catch(() => {});
-  }
-
-  function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function handleUrl(rawUrl) {
-    try {
-      const url = new URL(rawUrl.trim());
-      let embedSrc = null;
-      let label = '';
-
-      if (url.hostname.includes('youtube.com') || url.hostname === 'youtu.be') {
-        let videoId = null;
-        if (url.hostname === 'youtu.be') {
-          videoId = url.pathname.slice(1);
-        } else if (url.searchParams.get('v')) {
-          videoId = url.searchParams.get('v');
-        } else if (url.pathname.startsWith('/embed/')) {
-          videoId = url.pathname.split('/embed/')[1];
-        }
-        if (videoId) {
-          embedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0&modestbranding=1&showinfo=0&controls=1&iv_load_policy=3`;
-          label = 'YouTube: ' + videoId;
-        }
-      } else if (url.hostname.includes('soundcloud.com')) {
-        embedSrc = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url.href) + '&color=%23a9e0c9&auto_play=false&show_comments=false';
-        label = 'SoundCloud';
-      }
-
-      if (embedSrc) {
-        addToPlaylist({ type: 'iframe', src: embedSrc, label: label });
-        musicUrlInput.value = '';
-        return true;
-      } else {
-        alert('Chỉ hỗ trợ link YouTube hoặc SoundCloud.');
-        return false;
-      }
-    } catch (err) {
-      alert('Link không hợp lệ.');
-      return false;
-    }
-  }
-
-  musicUrlInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleUrl(musicUrlInput.value);
-  });
-
-  function handleAudioFiles(files) {
-    for (const file of files) {
-      if (!file.type.startsWith('audio/')) continue;
-      const url = URL.createObjectURL(file);
-      addToPlaylist({ type: 'audio', src: url, label: file.name, name: file.name });
-    }
-    musicFileInput.value = '';
-  }
-
-  musicDrop.addEventListener('click', () => musicFileInput.click());
-  musicFileInput.addEventListener('change', () => handleAudioFiles(musicFileInput.files));
-
-  musicDrop.addEventListener('dragover', (e) => { e.preventDefault(); musicDrop.classList.add('dragover'); });
-  musicDrop.addEventListener('dragleave', () => musicDrop.classList.remove('dragover'));
-  musicDrop.addEventListener('drop', (e) => {
-    e.preventDefault();
-    musicDrop.classList.remove('dragover');
-    handleAudioFiles(e.dataTransfer.files);
-  });
-
-  /* ========== TOGGLE MUSIC PANEL ========== */
-  document.getElementById('btn-music').addEventListener('click', () => {
-    musicPanel.classList.toggle('open');
-  });
-
-  document.addEventListener('click', (e) => {
-    if (musicPanel.classList.contains('open') &&
-        !musicPanel.contains(e.target) &&
-        e.target.id !== 'btn-music' &&
-        !e.target.closest('#btn-music')) {
-      musicPanel.classList.remove('open');
-    }
-  });
-
   /* ========== AUTOFOCUS ========== */
   editor.addEventListener('click', () => editor.focus());
   window.addEventListener('load', () => {
     editor.focus();
     setCaretBlink(true);
     scheduleCaretUpdate();
-    // Cuộn xuống cuối nếu có nội dung
     if (editor.innerHTML.trim().length > 0) {
       editorWrap.scrollTop = editorWrap.scrollHeight;
     }
