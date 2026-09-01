@@ -93,6 +93,11 @@
     return rect;
   }
 
+  function scrollToBottom() {
+    // Cuộn xuống cuối vùng soạn thảo
+    editorWrap.scrollTop = editorWrap.scrollHeight;
+  }
+
   function updateCaret() {
     if (document.activeElement !== editor) {
       caret.classList.add('hidden');
@@ -111,6 +116,9 @@
     caret.style.top = rect.top + 'px';
     caret.style.height = height + 'px';
     lastCaretPos = { left: rect.left, top: rect.top, height: height };
+
+    // Tự động cuộn xuống khi viết
+    scrollToBottom();
   }
 
   let caretRaf = null;
@@ -126,6 +134,35 @@
   editor.addEventListener('click', scheduleCaretUpdate);
   editorWrap.addEventListener('scroll', scheduleCaretUpdate);
   window.addEventListener('resize', scheduleCaretUpdate);
+
+  /* ========== CLEAR ALL (Tạo mới) ========== */
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    if (confirm('Bạn có chắc muốn xóa toàn bộ nội dung? (không thể khôi phục)')) {
+      // Xóa nội dung editor
+      editor.innerHTML = '';
+      // Xóa tiêu đề
+      titleInput.value = '';
+      // Xóa lưu tạm
+      localStorage.removeItem(STORAGE_KEY);
+      // Cập nhật số từ
+      updateWordCount();
+      // Đưa con trỏ về đầu
+      editor.focus();
+      // Đặt caret ở đầu
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      // Cập nhật caret và cuộn lên đầu
+      scheduleCaretUpdate();
+      editorWrap.scrollTop = 0;
+      // Hiển thị thông báo
+      saveStatusEl.textContent = 'Đã tạo mới';
+      setTimeout(() => { saveStatusEl.textContent = ''; }, 1500);
+    }
+  });
 
   /* ========== WORD COUNT ========== */
   function countWords(text) {
@@ -200,6 +237,9 @@
         editor.innerHTML = data.content || '';
         updateWordCount();
         scheduleAutosave();
+        // Cuộn lên đầu sau khi tải
+        editorWrap.scrollTop = 0;
+        scheduleCaretUpdate();
       } catch (err) {
         alert('File .chill không hợp lệ.');
       }
@@ -472,6 +512,10 @@
     editor.focus();
     setCaretBlink(true);
     scheduleCaretUpdate();
+    // Cuộn xuống cuối nếu có nội dung
+    if (editor.innerHTML.trim().length > 0) {
+      editorWrap.scrollTop = editorWrap.scrollHeight;
+    }
   });
 
   /* ========== PASTE PLAIN TEXT ========== */
