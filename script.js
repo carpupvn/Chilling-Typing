@@ -44,12 +44,14 @@
     else caret.classList.remove('blink');
   }
 
+  // Khi người dùng gõ phím, đánh dấu đang gõ
   editor.addEventListener('keydown', () => {
     isTyping = true;
     clearTimeout(typingTimer);
     setCaretBlink(false);
   });
 
+  // Khi người dùng thả phím, đặt timer để tắt trạng thái gõ
   editor.addEventListener('keyup', () => {
     clearTimeout(typingTimer);
     typingTimer = setTimeout(() => {
@@ -110,9 +112,8 @@
     caret.style.height = height + 'px';
     lastCaretPos = { left: rect.left, top: rect.top, height: height };
 
-    // Chỉ tự động cuộn xuống nếu người dùng đang ở gần cuối (không kéo lên)
-    const isNearBottom = editorWrap.scrollTop + editorWrap.clientHeight >= editorWrap.scrollHeight - 30;
-    if (isNearBottom) {
+    // Chỉ tự động cuộn xuống khi đang gõ
+    if (isTyping) {
       scrollToBottom();
     }
   }
@@ -251,5 +252,7 @@
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text/plain');
     document.execCommand('insertText', false, text);
+    // Khi paste, nội dung thay đổi, ta cuộn xuống để thấy nội dung vừa dán
+    setTimeout(() => { scrollToBottom(); }, 50);
   });
 })();
