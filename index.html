@@ -14,11 +14,21 @@
     <header>
       <input id="title-input" type="text" placeholder="Chưa đặt tên" maxlength="80" />
       <div class="toolbar">
+        <!-- Nút Mở file: sử dụng biểu tượng mũi tên xuống -->
         <button class="icon-btn" id="btn-upload" title="Mở file .chill" aria-label="Mở file">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
         </button>
+        <!-- Nút Lưu file: sử dụng biểu tượng mũi tên lên -->
         <button class="icon-btn" id="btn-download" title="Lưu file .chill" aria-label="Lưu file">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
         </button>
         <button class="icon-btn" id="btn-clear" title="Tạo mới (xóa toàn bộ)" aria-label="Tạo mới">
           <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
