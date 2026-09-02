@@ -12,23 +12,16 @@
 <body>
   <div id="app">
     <header>
-      <input id="title-input" type="text" placeholder="Chưa đặt tên" maxlength="80" />
+      <div class="header-left">
+        <span class="brand">✍️ Chilling Typing</span>
+        <input id="title-input" type="text" placeholder="Chưa đặt tên" maxlength="80" />
+      </div>
       <div class="toolbar">
-        <!-- Nút Mở file (Upload): mũi tên lên ↑ -->
         <button class="icon-btn" id="btn-upload" title="Mở file .chill" aria-label="Mở file">
-          <svg viewBox="0 0 24 24">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         </button>
-        <!-- Nút Lưu file (Download): mũi tên xuống ↓ -->
         <button class="icon-btn" id="btn-download" title="Lưu file .chill" aria-label="Lưu file">
-          <svg viewBox="0 0 24 24">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
         <button class="icon-btn" id="btn-clear" title="Tạo mới (xóa toàn bộ)" aria-label="Tạo mới">
           <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -52,6 +45,22 @@
     </footer>
 
     <input type="file" id="file-input" accept=".chill,application/json" />
+  </div>
+
+  <!-- Overlay cho hiệu ứng xóa -->
+  <div id="fade-overlay"></div>
+
+  <!-- Modal xác nhận -->
+  <div id="confirm-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon">⚠️</div>
+      <h3 class="modal-title">Xóa toàn bộ?</h3>
+      <p class="modal-message">Bạn có chắc muốn xóa tất cả nội dung?<br />Hành động này không thể hoàn tác.</p>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="modal-cancel">Hủy</button>
+        <button class="modal-btn modal-btn-confirm" id="modal-confirm">Xóa</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
