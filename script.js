@@ -66,31 +66,42 @@
     scheduleCaretUpdate();
   });
 
-  function setCaretBlink(blink) {
-    if (blink) caret.classList.add('blink');
-    else caret.classList.remove('blink');
+  // Chuyển caret giữa 2 chế độ:
+  // - "blink": đứng yên, nháy ẩn/hiện theo caret-blink (lúc không gõ).
+  // - "typing": không nháy ẩn/hiện, luôn hiện nhưng nén-nhả liên tục theo
+  //   caret-typing-pulse, cùng chu kỳ 1.1s với caret-blink nhưng ngược pha
+  //   (xem giải thích trong style.css).
+  function setCaretMode(typing) {
+    if (typing) {
+      caret.classList.remove('blink');
+      caret.classList.add('typing');
+    } else {
+      caret.classList.remove('typing');
+      caret.classList.add('blink');
+    }
   }
 
   editor.addEventListener('keydown', () => {
     isTyping = true;
     clearTimeout(typingTimer);
-    setCaretBlink(false);
+    setCaretMode(true);
   });
 
   editor.addEventListener('keyup', () => {
     clearTimeout(typingTimer);
     typingTimer = setTimeout(() => {
       isTyping = false;
-      setCaretBlink(true);
+      setCaretMode(false);
     }, 300);
   });
 
   editor.addEventListener('focus', () => {
-    if (!isTyping) setCaretBlink(true);
+    if (!isTyping) setCaretMode(false);
     scheduleCaretUpdate();
   });
   editor.addEventListener('blur', () => {
-    setCaretBlink(false);
+    caret.classList.remove('typing');
+    caret.classList.remove('blink');
     caret.classList.add('hidden');
   });
 
@@ -157,6 +168,8 @@
     caret.style.height = height + 'px';
     lastCaretPos = { left: rect.left, top: rect.top, height: height };
 
+    // Đang gõ -> hiệu ứng nén/nhả đã được xử lý liên tục bằng animation CSS
+    // (class "typing", xem setCaretMode), ở đây chỉ cần cuộn theo chữ.
     if (isTyping) {
       scrollToBottom();
     }
@@ -208,7 +221,7 @@
     setTimeout(() => {
       editor.focus();
       caret.classList.remove('hidden');
-      if (!isTyping) setCaretBlink(true);
+      if (!isTyping) setCaretMode(false);
       scheduleCaretUpdate();
     }, 350);
   }
@@ -529,7 +542,7 @@
   editor.addEventListener('click', () => editor.focus());
   window.addEventListener('load', () => {
     editor.focus();
-    setCaretBlink(true);
+    setCaretMode(false);
     scheduleCaretUpdate();
     if (editor.innerHTML.trim().length > 0) {
       editorWrap.scrollTop = editorWrap.scrollHeight;

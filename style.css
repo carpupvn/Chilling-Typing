@@ -160,7 +160,7 @@ main {
 
 #editor {
   outline: none;
-  font-size: 26px;
+  font-size: 31px;
   line-height: 1.85;
   font-weight: 500;
   caret-color: transparent;
@@ -183,9 +183,11 @@ main {
   background: var(--caret);
   border-radius: 2px;
   box-shadow: 0 0 8px 1px var(--caret-glow);
-  transition: left 0.18s ease-out, top 0.18s ease-out, height 0.12s ease-out;
+  transition: left 0.18s ease-out, top 0.18s ease-out, height 0.12s ease-out,
+    transform 0.45s cubic-bezier(0.25, 0.85, 0.4, 1.05);
   will-change: left, top, transform;
-  transform: translateZ(0);
+  transform: translateZ(0) scaleY(1);
+  transform-origin: center;
   pointer-events: none;
   z-index: 5;
 }
@@ -194,10 +196,28 @@ main {
 }
 #caret.hidden { opacity: 0; }
 
+/* Đang gõ liên tục -> thay vì nháy ẩn/hiện, caret luôn hiện nhưng hơi "nén"
+   theo chiều dọc rồi giãn ra lại, như một nhịp thở đều, cùng chu kỳ 1.1s
+   với animation nháy (caret-blink) ở trên. Điểm 0% và 100% phải bằng nhau
+   (đều là scaleY đầy đủ) để animation khép vòng mượt, không bị "nhảy cóc"
+   giật cục mỗi khi lặp lại chu kỳ. Điểm nén nằm giữa chu kỳ (50%), đúng lúc
+   caret-blink lẽ ra mờ đi nếu đang ở chế độ nháy — coi như "nghịch pha":
+   thay vì mờ đi, caret co lại nhẹ rồi giãn ra, không bao giờ biến mất.
+   Biên độ nén nhẹ (scaleY 0.93) và ease-in-out trải đều cả chu kỳ để mượt,
+   không giật. */
+#caret.typing {
+  animation: caret-typing-pulse 1.1s ease-in-out infinite;
+}
+
 @keyframes caret-blink {
   0%, 45% { opacity: 1; }
   50%, 95% { opacity: 0.15; }
   100% { opacity: 1; }
+}
+
+@keyframes caret-typing-pulse {
+  0%, 100% { transform: translateZ(0) scaleY(1); }
+  50% { transform: translateZ(0) scaleY(0.93); }
 }
 
 /* ---------- Footer ---------- */
@@ -392,11 +412,11 @@ input[type="file"] { display: none; }
     padding: 24px 0 100px;
   }
   #editor {
-    font-size: 20px;
+    font-size: 25px;
     line-height: 1.7;
   }
   #fade-overlay .word {
-    font-size: 20px;
+    font-size: 25px;
     line-height: 1.7;
   }
   footer {
